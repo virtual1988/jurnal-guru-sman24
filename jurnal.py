@@ -2,62 +2,52 @@ import streamlit as st
 from streamlit_gsheets import GSheetsConnection
 import pandas as pd
 
-# --- 1. KONFIGURASI HALAMAN ---
-st.set_page_config(page_title="Jurnal Guru SMAN 24", layout="centered")
-
-# URL Google Sheet Bapak
-URL_SHEET = "https://docs.google.com/spreadsheets/d/1Yq1VujXXKKLXhm7J1PQKX23YJEV3T7Jzc2r1u0fpsBg/edit?usp=sharing"
-
-# Membuat koneksi ke Google Sheets
-conn = st.connection("gsheets", type=GSheetsConnection)
-
-# --- 2. TAMPILAN JUDUL ---
+# 1. Judul Aplikasi
 st.title("📓 Jurnal Pembelajaran Guru")
 st.subheader("SMAN 24 Kabupaten Tangerang")
 st.write("Selamat Datang, Pak Budiarto. Silakan isi jurnal di bawah ini.")
 
-# --- 3. FORM INPUT JURNAL ---
-with st.form(key="form_jurnal"):
-    st.write("### Masukkan Data Pembelajaran")
+# 2. Inisialisasi Koneksi ke Google Sheets
+conn = st.connection("gsheets", type=GSheetsConnection)
+
+# 3. Membuat Form Inputan
+with st.form(key="jurnal_form"):
+    col1, col2 = st.columns(2)
     
-    # Baris 1: Hari, Tanggal, Jam Ke
-    col1, col2, col3 = st.columns(3)
     with col1:
         hari = st.selectbox("Hari", ["Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"])
-    with col2:
         tanggal = st.date_input("Tanggal")
-    with col3:
-        jam_ke = st.text_input("Jam Ke (Contoh: 3-4)")
-
-    # Baris 2: Kelas dan Materi
-    kelas = st.text_input("Kelas (Contoh: 12.9)")
-    materi = st.text_area("Materi Pembelajaran")
-
-    # Baris 3: Kehadiran Siswa
-    st.write("**Kehadiran Siswa**")
-    col_hadir, col_tidak = st.columns(2)
-    with col_hadir:
-        hadir = st.number_input("Hadir", min_value=0, step=1)
-    with col_tidak:
-        tidak_hadir = st.text_input("Tidak Hadir (Gunakan '-' jika nihil)", value="-")
-
-    # Baris 4: Keterangan (Sudah Input Teks Manual)
-    keterangan = st.text_input("Keterangan", placeholder="Contoh: Terlaksana dengan baik / Materi selesai")
     
-    # Tombol Simpan (Harus sejajar dengan 'keterangan')
-    submit_button = st.form_submit_button(label="Simpan")
+    with col2:
+        jam_ke = st.text_input("Jam Ke (Contoh: 1-3)")
+        kelas = st.text_input("Kelas (Contoh: 10.1)")
 
-# --- 4. LOGIKA PENYIMPANAN DATA ---
+    materi = st.text_area("Materi Pembelajaran")
+    
+    st.write("---")
+    st.write("### Kehadiran Siswa")
+    c1, c2 = st.columns(2)
+    with c1:
+        hadir = st.number_input("Hadir", min_value=0, step=1)
+    with c2:
+        tidak_hadir = st.text_input("Tidak Hadir (Gunakan '-' jika nihil)")
+
+    # Kolom keterangan yang Bapak minta (input teks manual)
+    keterangan = st.text_input("Keterangan", placeholder="Contoh: Terlaksana dengan baik / Materi selesai")
+
+    submit_button = st.form_submit_button(label="Simpan Data")
+
+# 4. Logika Pengiriman Data (Kode Sakti)
 if submit_button:
-    if kelas == "" or materi == "":
-        st.error("Gagal! Kolom Kelas dan Materi wajib diisi.")
+    if not materi or not kelas:
+        st.error("Mohon lengkapi Materi dan Kelas terlebih dahulu!")
     else:
         try:
-            # Membaca data yang sudah ada
-            existing_data = conn.read(spreadsheet=URL_SHEET)
+            # Mengambil data lama untuk digabungkan dengan data baru
+            existing_data = conn.read(worksheet="Sheet1", usecols=list(range(8)), ttl=0)
             
-            # Membuat baris data baru
-            new_record = pd.DataFrame([{
+            # Membuat baris data baru dari inputan Bapak
+            new_data = pd.DataFrame([{
                 "Hari": hari,
                 "Tanggal": str(tanggal),
                 "Jam Ke": jam_ke,
@@ -67,12 +57,12 @@ if submit_button:
                 "Tidak Hadir": tidak_hadir,
                 "Keterangan": keterangan
             }])
-            
-            # Menggabungkan data
-            updated_df = pd.concat([existing_data, new_record], ignore_index=True)
-            
+
+            # Menggabungkan data lama dan baru
+            updated_df = pd.concat([existing_data, new_data], ignore_index=True)
+
             # Update kembali ke Google Sheets
-            conn.update(spreadsheet=URL_SHEET, data=updated_df)
+            conn.update(worksheet="Sheet1", data=updated_df)
             
             st.success(f"Alhamdulillah! Jurnal kelas {kelas} berhasil disimpan.")
             st.balloons()
