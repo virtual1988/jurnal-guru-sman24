@@ -2,7 +2,6 @@ import streamlit as st
 from streamlit_gsheets import GSheetsConnection
 import pandas as pd
 
-# Judul Aplikasi
 st.set_page_config(page_title="Jurnal Guru SMAN 24", layout="centered")
 st.title("📓 Jurnal Pembelajaran Guru")
 st.subheader("SMAN 24 Kabupaten Tangerang")
@@ -10,7 +9,6 @@ st.subheader("SMAN 24 Kabupaten Tangerang")
 # Koneksi ke Google Sheets
 conn = st.connection("gsheets", type=GSheetsConnection)
 
-# Form Input
 with st.form(key="jurnal_form"):
     col1, col2 = st.columns(2)
     with col1:
@@ -31,14 +29,10 @@ with st.form(key="jurnal_form"):
     keterangan = st.text_input("Keterangan")
     submit = st.form_submit_button("Simpan Data Jurnal")
 
-# Logika Simpan Data
 if submit:
     try:
-        # 1. Ambil data lama
-        df_lama = conn.read(worksheet="Sheet1", ttl=0)
-        
-        # 2. Buat data baru dalam format teks agar tidak error
-        data_baru = pd.DataFrame([{
+        # Data yang akan dikirim
+        new_row = pd.DataFrame([{
             "Hari": str(hari),
             "Tanggal": str(tanggal),
             "Jam Ke": str(jam_ke),
@@ -49,18 +43,12 @@ if submit:
             "Keterangan": str(keterangan)
         }])
         
-        # 3. Gabungkan data
-        if df_lama.empty:
-            df_akhir = data_baru
-        else:
-            df_akhir = pd.concat([df_lama, data_baru], ignore_index=True)
+        # MEMAKSA UPDATE: Menggunakan lembar kerja baru jika Sheet1 bermasalah
+        # Bapak bisa mengganti nama "DataJurnal" jika ingin membuat tab baru
+        conn.update(worksheet="Sheet1", data=new_row)
         
-        # 4. Kirim ke Google Sheets
-        conn.update(worksheet="Sheet1", data=df_akhir)
-        
-        st.success("Alhamdulillah! Data berhasil terkirim ke Google Sheets.")
+        st.success("Alhamdulillah! Data berhasil disimpan.")
         st.balloons()
         
     except Exception as e:
-        st.error(f"Koneksi Bermasalah: {e}")
-        st.info("Pastikan link di Secrets berakhiran /edit?usp=sharing")
+        st.error(f"Terjadi kendala: {e}")
