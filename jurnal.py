@@ -40,16 +40,17 @@ with st.form(key="jurnal_form"):
 
     submit_button = st.form_submit_button(label="Simpan Data Jurnal")
 
-# 5. Logika Pengiriman Data (Anti-Gagal)
+# 5. Logika Pengiriman Data (Sangat Stabil)
 if submit_button:
     if not materi or not kelas:
         st.error("Waduh Pak, Materi dan Kelas jangan dikosongkan ya!")
     else:
         try:
-            # Membaca data lama dan paksa jadi teks (string) agar tidak error format
-            existing_data = conn.read(worksheet="Sheet1", ttl=0).astype(str)
+            # Membaca data lama dan membersihkan spasi di nama kolom secara otomatis
+            existing_data = conn.read(worksheet="Sheet1", ttl=0)
+            existing_data.columns = existing_data.columns.str.strip()
             
-            # Membuat baris data baru (Semua dipaksa jadi string/teks)
+            # Membuat baris data baru (Semua dipaksa jadi string/teks agar tidak Error 400)
             new_row = {
                 "Hari": str(hari),
                 "Tanggal": tanggal.strftime('%Y-%m-%d'),
@@ -68,9 +69,9 @@ if submit_button:
             # Update kembali ke Google Sheets
             conn.update(worksheet="Sheet1", data=updated_df)
             
-            st.success(f"Alhamdulillah! Jurnal untuk kelas {kelas} sudah tersimpan di Google Sheets.")
+            st.success(f"Alhamdulillah! Jurnal kelas {kelas} sudah tersimpan.")
             st.balloons()
             
         except Exception as e:
-            st.error(f"Maaf Pak, ada kendala koneksi: {e}")
-            st.info("Catatan: Pastikan di Google Sheets Bapak sudah ada judul kolom di Baris 1.")
+            st.error(f"Maaf Pak, ada kendala: {e}")
+            st.info("Saran: Pastikan Baris 1 di Sheets sudah benar dan tidak ada spasi liar.")
