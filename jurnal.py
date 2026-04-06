@@ -32,37 +32,35 @@ with st.form(key="jurnal_form"):
     with c2:
         tidak_hadir = st.text_input("Tidak Hadir (Gunakan '-' jika nihil)")
 
-    # Kolom keterangan yang Bapak minta (input teks manual)
-    keterangan = st.text_input("Keterangan", placeholder="Contoh: Terlaksana dengan baik / Materi selesai")
+    keterangan = st.text_input("Keterangan", placeholder="Contoh: Terlaksana dengan baik")
 
     submit_button = st.form_submit_button(label="Simpan Data")
 
-# 4. Logika Pengiriman Data (Kode Sakti)
+# 4. Logika Pengiriman Data
 if submit_button:
     if not materi or not kelas:
         st.error("Mohon lengkapi Materi dan Kelas terlebih dahulu!")
     else:
         try:
-            # Mengambil data lama untuk digabungkan dengan data baru
+            # Mengambil data lama
             existing_data = conn.read(worksheet="Sheet1", usecols=list(range(8)), ttl=0)
             
-            # Membuat baris data baru dari inputan Bapak
-            # Menyiapkan data baru dengan format teks agar Google Sheets tidak bingung
-        new_data = pd.DataFrame([{
-            "Hari": str(hari),
-            "Tanggal": str(tanggal),
-            "Jam Ke": str(jam_ke),
-            "Kelas": str(kelas),
-            "Materi": str(materi),
-            "Hadir": str(hadir),
-            "Tidak Hadir": str(tidak_hadir),
-            "Keterangan": str(keterangan)
-        }])
+            # Membuat baris data baru (Pastikan bagian ini menjorok ke dalam try)
+            new_data = pd.DataFrame([{
+                "Hari": str(hari),
+                "Tanggal": str(tanggal),
+                "Jam Ke": str(jam_ke),
+                "Kelas": str(kelas),
+                "Materi": str(materi),
+                "Hadir": str(hadir),
+                "Tidak Hadir": str(tidak_hadir),
+                "Keterangan": str(keterangan)
+            }])
 
-            # Menggabungkan data lama dan baru
+            # Menggabungkan data
             updated_df = pd.concat([existing_data, new_data], ignore_index=True)
 
-            # Update kembali ke Google Sheets
+            # Update ke Google Sheets
             conn.update(worksheet="Sheet1", data=updated_df)
             
             st.success(f"Alhamdulillah! Jurnal kelas {kelas} berhasil disimpan.")
@@ -70,4 +68,4 @@ if submit_button:
             
         except Exception as e:
             st.error(f"Terjadi kesalahan koneksi: {e}")
-            st.info("Pastikan Google Sheet Anda sudah di-set 'Anyone with the link can EDIT'")
+            st.info("Pastikan Google Sheet Anda tetap di-set 'Anyone with the link can EDIT'")
