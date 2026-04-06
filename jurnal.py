@@ -32,13 +32,13 @@ with st.form(key="jurnal_form", clear_on_submit=True):
     st.markdown("### Kehadiran & Keterangan")
     c1, c2 = st.columns(2)
     with c1:
-        hadir = st.number_input("Jumlah Siswa Hadir", min_value=0, step=1)
+        hadir = st.text_input("Jumlah Siswa Hadir(Sebutkan nama/jumlah)")
     with c2:
         tidak_hadir = st.text_input("Tidak Hadir (Sebutkan nama/jumlah)")
 
-    keterangan = st.text_input("Keterangan Tambahan", placeholder="Contoh: Terlaksana dengan lancar")
+    keterangan = st.text_input("Keterangan", placeholder="Contoh: Terlaksana")
 
-    submit_button = st.form_submit_button(label="🚀 Simpan Data ke Spreadsheet")
+    submit_button = st.form_submit_button(label="🚀 Simpan Data")
 
 # 5. Logika Pengiriman Data ke Google Sheets
 if submit_button:
