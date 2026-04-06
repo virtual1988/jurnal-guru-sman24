@@ -47,16 +47,17 @@ if submit_button:
             existing_data = conn.read(worksheet="Sheet1", usecols=list(range(8)), ttl=0)
             
             # Membuat baris data baru dari inputan Bapak
-            new_data = pd.DataFrame([{
-                "Hari": hari,
-                "Tanggal": str(tanggal),
-                "Jam Ke": jam_ke,
-                "Kelas": kelas,
-                "Materi": materi,
-                "Hadir": hadir,
-                "Tidak Hadir": tidak_hadir,
-                "Keterangan": keterangan
-            }])
+            # Menyiapkan data baru dengan format teks agar Google Sheets tidak bingung
+        new_data = pd.DataFrame([{
+            "Hari": str(hari),
+            "Tanggal": str(tanggal),
+            "Jam Ke": str(jam_ke),
+            "Kelas": str(kelas),
+            "Materi": str(materi),
+            "Hadir": str(hadir),
+            "Tidak Hadir": str(tidak_hadir),
+            "Keterangan": str(keterangan)
+        }])
 
             # Menggabungkan data lama dan baru
             updated_df = pd.concat([existing_data, new_data], ignore_index=True)
